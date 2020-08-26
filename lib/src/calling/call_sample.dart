@@ -1,3 +1,5 @@
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'dart:core';
 import 'signaling.dart';
@@ -49,11 +51,13 @@ class _CallSampleState extends State<CallSample> {
     _remoteRenderer.dispose();
   }
 
+  static AudioCache player = AudioCache();
+  var playerInstance;
   void _connect() async {
     if (_signaling == null) {
       _signaling = Signaling(_selfId)..connect();
 
-      _signaling.onStateChange = (SignalingState state) {
+      _signaling.onStateChange = (SignalingState state) async {
         switch (state) {
           case SignalingState.CallStateNew:
             this.setState(() {
@@ -66,13 +70,24 @@ class _CallSampleState extends State<CallSample> {
               _remoteRenderer.srcObject = null;
               _inCalling = false;
             });
+
             break;
           case SignalingState.CallStateInvite:
+            playerInstance = player.loop("mp3/phone-invite.mp3");
+
+            break;
           case SignalingState.CallStateConnected:
+            break;
           case SignalingState.CallStateRinging:
+            playerInstance = player.loop("mp3/messenger_ringtone.mp3");
+            break;
           case SignalingState.ConnectionClosed:
+            break;
           case SignalingState.ConnectionError:
+            break;
           case SignalingState.ConnectionOpen:
+            playerInstance.stop();
+
             break;
         }
       };

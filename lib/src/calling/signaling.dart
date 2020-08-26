@@ -116,7 +116,9 @@ class Signaling {
     _peerConnections.forEach((key, pc) {
       pc.close();
     });
-    //  if (_socket != null) _socket.close();
+    if (this.onStateChange != null) {
+      this.onStateChange(SignalingState.ConnectionClosed);
+    }
   }
 
   void switchCamera() {
@@ -143,6 +145,7 @@ class Signaling {
 
     if (this.onStateChange != null) {
       this.onStateChange(SignalingState.CallStateNew);
+      this.onStateChange(SignalingState.CallStateInvite);
     }
 
     _createPeerConnection(peer_id, media).then((pc) {
@@ -179,12 +182,16 @@ class Signaling {
 
           if (this.onStateChange != null) {
             this.onStateChange(SignalingState.CallStateNew);
+            this.onStateChange(SignalingState.CallStateRinging);
           }
           var pc = await _createPeerConnection(id, media);
           _peerConnections[id] = pc;
           await pc.setRemoteDescription(new RTCSessionDescription(
               description['sdp'], description['type']));
           await _createAnswer(id, pc, media);
+          if (this.onStateChange != null) {
+            this.onStateChange(SignalingState.ConnectionOpen);
+          }
           if (this._remoteCandidates.length > 0) {
             _remoteCandidates.forEach((candidate) async {
               await pc.addCandidate(candidate);
@@ -202,6 +209,9 @@ class Signaling {
           if (pc != null) {
             await pc.setRemoteDescription(new RTCSessionDescription(
                 description['sdp'], description['type']));
+          }
+          if (this.onStateChange != null) {
+            this.onStateChange(SignalingState.ConnectionOpen);
           }
         }
         break;
